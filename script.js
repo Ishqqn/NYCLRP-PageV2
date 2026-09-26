@@ -1,7 +1,583 @@
-const staff=[{id:"100001",name:"Example Moderator",rank:"Trial Moderator",joined:"Sep 26, 2026"},{id:"100002",name:"Example Administrator",rank:"Administration Team",joined:"Sep 26, 2026"},{id:"100003",name:"Example Supervisor",rank:"Trial Supervisor",joined:"Sep 26, 2026"}];
-function logout(){alert("Discord logout will be connected when OAuth2 backend is added.");}
-function openModal(){document.getElementById("modal").classList.add("show")}
-function closeModal(){document.getElementById("modal").classList.remove("show")}
-function render(q=""){let r=document.getElementById("rows");if(!r)return;let a=staff.filter(x=>(x.name+x.rank).toLowerCase().includes(q.toLowerCase()));r.innerHTML=a.map(x=>`<tr><td><div class="person"><i>${x.name[0]}</i><div><b>${x.name}</b><small>Discord ID: ${x.id}</small></div></div></td><td><span class="tag">${x.rank}</span></td><td><span class="status">● Active</span></td><td>${x.joined}</td></tr>`).join("");document.getElementById("total").textContent=a.length+" member"+(a.length===1?"":"s");let c=document.getElementById("count");if(c)c.textContent=staff.length}
-function addStaff(){let id=document.getElementById("newId").value.trim(),name=document.getElementById("newName").value.trim(),rank=document.getElementById("newRank").value;if(!id||!name)return alert("Enter a Discord ID and username.");staff.push({id,name,rank,joined:"Today"});closeModal();render();}
-document.addEventListener("DOMContentLoaded",()=>{let n=localStorage.getItem("ny_name")||"Staff Member";let r=localStorage.getItem("ny_rank")||"New York City Staff";document.querySelectorAll("#user").forEach(x=>x.textContent=n);document.querySelectorAll("#rank").forEach(x=>x.textContent=r);document.querySelectorAll("#avatar").forEach(x=>x.textContent=n[0].toUpperCase());render();let s=document.getElementById("search");if(s)s.oninput=e=>render(e.target.value);let t=document.getElementById("time");if(t)t.textContent=new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});});
+const defaultStaff = [
+    {
+        id: "100001",
+        name: "Example Moderator",
+        rank: "Trial Moderator",
+        joined: "Sep 26, 2026"
+    },
+
+    {
+        id: "100002",
+        name: "Example Administrator",
+        rank: "Administration Team",
+        joined: "Sep 26, 2026"
+    },
+
+    {
+        id: "100003",
+        name: "Example Supervisor",
+        rank: "Trial Supervisor",
+        joined: "Sep 26, 2026"
+    }
+];
+
+
+let staff =
+    JSON.parse(
+        localStorage.getItem("ny_staff") || "null"
+    ) || defaultStaff;
+
+
+let editingId = null;
+
+
+/* =========================
+   SAVE STAFF
+========================= */
+
+function saveStaff() {
+
+    localStorage.setItem(
+        "ny_staff",
+        JSON.stringify(staff)
+    );
+
+}
+
+
+/* =========================
+   LOGOUT
+========================= */
+
+function logout() {
+
+    alert(
+        "Discord logout will be connected when OAuth2 backend is added."
+    );
+
+}
+
+
+/* =========================
+   OPEN ADD / EDIT MODAL
+========================= */
+
+function openModal(staffId = null) {
+
+    editingId = staffId;
+
+    const modal =
+        document.getElementById("modal");
+
+    const title =
+        document.getElementById("modalTitle");
+
+    const description =
+        document.getElementById("modalDescription");
+
+    const submit =
+        document.getElementById("modalSubmit");
+
+    const idInput =
+        document.getElementById("newId");
+
+    const nameInput =
+        document.getElementById("newName");
+
+    const rankInput =
+        document.getElementById("newRank");
+
+
+    /* EDIT MODE */
+
+    if (staffId) {
+
+        const member =
+            staff.find(
+                x => x.id === staffId
+            );
+
+        if (!member) {
+            return;
+        }
+
+
+        title.textContent =
+            "Edit Staff Member";
+
+
+        description.textContent =
+            "Update this staff member's information and rank.";
+
+
+        submit.textContent =
+            "Save Changes";
+
+
+        idInput.value =
+            member.id;
+
+
+        nameInput.value =
+            member.name;
+
+
+        rankInput.value =
+            member.rank;
+
+
+        /*
+         * Discord ID cannot be changed
+         * when editing an existing member.
+         */
+
+        idInput.disabled = true;
+
+    }
+
+
+    /* ADD MODE */
+
+    else {
+
+        title.textContent =
+            "Add Staff Member";
+
+
+        description.textContent =
+            "Add a staff member to the NYCLRP staff panel.";
+
+
+        submit.textContent =
+            "Add Staff Member";
+
+
+        idInput.value = "";
+
+        nameInput.value = "";
+
+        rankInput.selectedIndex = 0;
+
+
+        idInput.disabled = false;
+
+    }
+
+
+    modal.classList.add("show");
+
+
+    setTimeout(
+        () => nameInput.focus(),
+        50
+    );
+
+}
+
+
+/* =========================
+   CLOSE MODAL
+========================= */
+
+function closeModal() {
+
+    document
+        .getElementById("modal")
+        .classList.remove("show");
+
+
+    editingId = null;
+
+
+    document
+        .getElementById("newId")
+        .disabled = false;
+
+}
+
+
+/* =========================
+   RENDER STAFF
+========================= */
+
+function render(q = "") {
+
+    const rows =
+        document.getElementById("rows");
+
+
+    if (!rows) {
+        return;
+    }
+
+
+    const query =
+        q.toLowerCase();
+
+
+    const filtered =
+        staff.filter(
+            member =>
+                (
+                    member.name +
+                    member.rank +
+                    member.id
+                )
+                .toLowerCase()
+                .includes(query)
+        );
+
+
+    rows.innerHTML =
+        filtered.map(member => {
+
+            const avatar =
+                member.name
+                    ? member.name[0].toUpperCase()
+                    : "?";
+
+
+            return `
+                <tr>
+
+                    <td>
+
+                        <div class="person">
+
+                            <i>
+                                ${escapeHtml(avatar)}
+                            </i>
+
+                            <div>
+
+                                <b>
+                                    ${escapeHtml(member.name)}
+                                </b>
+
+                                <small>
+                                    Discord ID:
+                                    ${escapeHtml(member.id)}
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="tag">
+                            ${escapeHtml(member.rank)}
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="status">
+                            ● Active
+                        </span>
+
+                    </td>
+
+
+                    <td>
+                        ${escapeHtml(member.joined)}
+                    </td>
+
+
+                    <td>
+
+                        <button
+                            class="edit-btn"
+                            onclick="openModal('${escapeJs(member.id)}')"
+                        >
+                            Edit
+                        </button>
+
+                    </td>
+
+                </tr>
+            `;
+
+        })
+        .join("");
+
+
+    const total =
+        document.getElementById("total");
+
+
+    if (total) {
+
+        total.textContent =
+            filtered.length +
+            " member" +
+            (filtered.length === 1 ? "" : "s");
+
+    }
+
+
+    const count =
+        document.getElementById("count");
+
+
+    if (count) {
+
+        count.textContent =
+            staff.length;
+
+    }
+
+}
+
+
+/* =========================
+   ADD / EDIT STAFF
+========================= */
+
+function addStaff() {
+
+    const id =
+        document
+            .getElementById("newId")
+            .value
+            .trim();
+
+
+    const name =
+        document
+            .getElementById("newName")
+            .value
+            .trim();
+
+
+    const rank =
+        document
+            .getElementById("newRank")
+            .value;
+
+
+    /* VALIDATION */
+
+    if (!id || !name) {
+
+        alert(
+            "Enter a Discord ID and username."
+        );
+
+        return;
+
+    }
+
+
+    /* EDIT EXISTING MEMBER */
+
+    if (editingId) {
+
+        const member =
+            staff.find(
+                x => x.id === editingId
+            );
+
+
+        if (!member) {
+            return;
+        }
+
+
+        member.name =
+            name;
+
+
+        member.rank =
+            rank;
+
+    }
+
+
+    /* ADD NEW MEMBER */
+
+    else {
+
+        const exists =
+            staff.some(
+                x => x.id === id
+            );
+
+
+        if (exists) {
+
+            alert(
+                "A staff member with this Discord ID already exists."
+            );
+
+            return;
+
+        }
+
+
+        staff.push({
+
+            id: id,
+
+            name: name,
+
+            rank: rank,
+
+            joined:
+                new Date().toLocaleDateString(
+                    "en-US",
+                    {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric"
+                    }
+                )
+
+        });
+
+    }
+
+
+    saveStaff();
+
+
+    closeModal();
+
+
+    render(
+        document
+            .getElementById("search")
+            ?.value || ""
+    );
+
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHtml(value) {
+
+    return String(value).replace(
+        /[&<>'"]/g,
+        character => ({
+
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            "'": "&#39;",
+            '"': "&quot;"
+
+        })[character]
+    );
+
+}
+
+
+/* =========================
+   ESCAPE JAVASCRIPT
+========================= */
+
+function escapeJs(value) {
+
+    return String(value)
+        .replace(/\\/g, "\\\\")
+        .replace(/'/g, "\\'");
+
+}
+
+
+/* =========================
+   PAGE LOAD
+========================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        const username =
+            localStorage.getItem(
+                "ny_name"
+            ) || "Staff Member";
+
+
+        const rank =
+            localStorage.getItem(
+                "ny_rank"
+            ) || "New York City Staff";
+
+
+        document
+            .querySelectorAll("#user")
+            .forEach(
+                element =>
+                    element.textContent =
+                        username
+            );
+
+
+        document
+            .querySelectorAll("#rank")
+            .forEach(
+                element =>
+                    element.textContent =
+                        rank
+            );
+
+
+        document
+            .querySelectorAll("#avatar")
+            .forEach(
+                element =>
+                    element.textContent =
+                        username[0].toUpperCase()
+            );
+
+
+        render();
+
+
+        const search =
+            document.getElementById(
+                "search"
+            );
+
+
+        if (search) {
+
+            search.oninput =
+                event =>
+                    render(
+                        event.target.value
+                    );
+
+        }
+
+
+        const time =
+            document.getElementById(
+                "time"
+            );
+
+
+        if (time) {
+
+            time.textContent =
+                new Date().toLocaleTimeString(
+                    [],
+                    {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    }
+                );
+
+        }
+
+    }
+);
