@@ -31,7 +31,6 @@
             ♙ <span>Staff Management</span>
         </a>
 
-
         <label>RESOURCES</label>
 
         <a href="resources.html">
@@ -43,7 +42,6 @@
         </a>
 
     </nav>
-
 
     <div class="bottom">
 
@@ -75,7 +73,6 @@
             </p>
 
         </div>
-
 
         <div class="profile">
 
@@ -234,12 +231,26 @@
         </label>
 
 
+        <!-- SAVE / ADD -->
+
         <button
             id="modalSubmit"
             class="primary wide"
             onclick="addStaff()"
         >
             Add Staff Member
+        </button>
+
+
+        <!-- DELETE -->
+
+        <button
+            id="deleteStaffBtn"
+            class="danger wide"
+            onclick="deleteStaff()"
+            style="display: none;"
+        >
+            Delete Staff Member
         </button>
 
     </div>
