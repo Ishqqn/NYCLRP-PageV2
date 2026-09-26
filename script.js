@@ -78,6 +78,9 @@ function openModal(staffId = null) {
     const submit =
         document.getElementById("modalSubmit");
 
+    const deleteBtn =
+        document.getElementById("deleteStaffBtn");
+
     const idInput =
         document.getElementById("newId");
 
@@ -88,7 +91,9 @@ function openModal(staffId = null) {
         document.getElementById("newRank");
 
 
-    /* EDIT MODE */
+    /* =========================
+       EDIT MODE
+    ========================= */
 
     if (staffId) {
 
@@ -114,6 +119,10 @@ function openModal(staffId = null) {
             "Save Changes";
 
 
+        deleteBtn.style.display =
+            "flex";
+
+
         idInput.value =
             member.id;
 
@@ -136,7 +145,9 @@ function openModal(staffId = null) {
     }
 
 
-    /* ADD MODE */
+    /* =========================
+       ADD MODE
+    ========================= */
 
     else {
 
@@ -150,6 +161,10 @@ function openModal(staffId = null) {
 
         submit.textContent =
             "Add Staff Member";
+
+
+        deleteBtn.style.display =
+            "none";
 
 
         idInput.value = "";
@@ -192,6 +207,17 @@ function closeModal() {
     document
         .getElementById("newId")
         .disabled = false;
+
+
+    const deleteBtn =
+        document.getElementById("deleteStaffBtn");
+
+    if (deleteBtn) {
+
+        deleteBtn.style.display =
+            "none";
+
+    }
 
 }
 
@@ -295,7 +321,7 @@ function render(q = "") {
                             class="edit-btn"
                             onclick="openModal('${escapeJs(member.id)}')"
                         >
-                            Edit
+                            ✎ Edit
                         </button>
 
                     </td>
@@ -361,7 +387,9 @@ function addStaff() {
             .value;
 
 
-    /* VALIDATION */
+    /* =========================
+       VALIDATION
+    ========================= */
 
     if (!id || !name) {
 
@@ -374,7 +402,9 @@ function addStaff() {
     }
 
 
-    /* EDIT EXISTING MEMBER */
+    /* =========================
+       EDIT EXISTING MEMBER
+    ========================= */
 
     if (editingId) {
 
@@ -399,7 +429,9 @@ function addStaff() {
     }
 
 
-    /* ADD NEW MEMBER */
+    /* =========================
+       ADD NEW MEMBER
+    ========================= */
 
     else {
 
@@ -441,6 +473,60 @@ function addStaff() {
         });
 
     }
+
+
+    saveStaff();
+
+
+    closeModal();
+
+
+    render(
+        document
+            .getElementById("search")
+            ?.value || ""
+    );
+
+}
+
+
+/* =========================
+   DELETE STAFF
+========================= */
+
+function deleteStaff() {
+
+    if (!editingId) {
+        return;
+    }
+
+
+    const member =
+        staff.find(
+            x => x.id === editingId
+        );
+
+
+    if (!member) {
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            `Are you sure you want to remove ${member.name} from the staff panel?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    staff =
+        staff.filter(
+            x => x.id !== editingId
+        );
 
 
     saveStaff();
